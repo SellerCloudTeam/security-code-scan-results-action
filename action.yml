@@ -25,11 +25,17 @@ runs:
             New-Item -ItemType Directory -Path $outputDir | Out-Null
         }
 
+        # Purge directory contents
+        Write-Host "Purging output folder $outputDir ..."
+
+        Remove-Item -Path "$outputDir\*" -Recurse -Force
+
         # Create the convert.js file
         $convertJsContent = @"
         const fs = require('fs')
 
         var args = process.argv.slice(2);
+
         var sarif = JSON.parse(fs.readFileSync(args[0], "utf8"));
 
         for (run of sarif.runs) {
@@ -38,7 +44,10 @@ runs:
           run.tool.driver.informationUri  = "https://security-code-scan.github.io";
 
           run.results = run.results.filter((e => e.ruleId.startsWith("SCS")));
-          run.tool.driver.rules = run.tool.driver.rules.filter((e => e.id.startsWith("SCS")));
+
+          if (run.tool.driver.rules) {
+            run.tool.driver.rules = run.tool.driver.rules.filter((e => e.id.startsWith("SCS")));
+          }
 
           for (let i = 0; i < run.results.length; ++i) {
             run.results[i].ruleIndex = undefined;
@@ -63,9 +72,11 @@ runs:
             }
           }
 
-          for (rule of run.tool.driver.rules) {
-            rule.shortDescription = undefined;
-            rule.help = { "text" : rule.helpUri};
+          if (run.tool.driver.rules) {
+            for (rule of run.tool.driver.rules) {
+              rule.shortDescription = undefined;
+              rule.help = { "text" : rule.helpUri};
+            }
           }
 
           run.language = undefined;
@@ -84,24 +95,40 @@ runs:
         # Process each .sarif file found in the current directory and its subdirectories
         Get-ChildItem -Path "." -Filter "*.sarif" -Recurse | ForEach-Object {
             $sarifFile = $_.FullName
+            $transformedSarifFile = "$($_.FullName).transformed"
+            $convertedSarifFile = "$($_.FullName).converted"
+
+            if (! (Get-Content $sarifFile) ) {
+              Write-Host "Skipping empty file $sarifFile ..."
+
+              return
+            }
 
             # Transform the SARIF file
-            sarif transform $sarifFile --output $sarifFile -f --sarif-output-version Current
+            Write-Host "Transforming SARIF file $sarifFile ..."
+
+            sarif transform "$sarifFile" --output "$transformedSarifFile" -f --sarif-output-version Current
 
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to transform SARIF file using sarif dotnet tool: $sarifFile"
             }
 
             # Run the convert.js script on the SARIF file
-            node $convertJsPath $sarifFile $sarifFile
+            Write-Host "Converting SARIF file $transformedSarifFile ..."
+
+            node $convertJsPath $transformedSarifFile $convertedSarifFile
 
             if ($LASTEXITCODE -ne 0) {
-                throw "Failed to convert SARIF file using NodeJS script convert.js: $sarifFile"
+                throw "Failed to convert SARIF file using NodeJS script convert.js: $transformedSarifFile"
             }
 
             # Move the processed SARIF file to the output directory
             $newFileName = "{0}.sarif" -f $i
-            Move-Item -Path $sarifFile -Destination (Join-Path -Path $outputDir -ChildPath $newFileName)
+            $destSarifFile = Join-Path -Path $outputDir -ChildPath $newFileName
+
+            Write-Host "Moving $convertedSarifFile to $destSarifFile ..."
+
+            Move-Item -Path $convertedSarifFile -Destination $destSarifFile
 
             # Increment the counter
             $i++
