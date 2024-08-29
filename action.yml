@@ -11,13 +11,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Convert sarif
+    - name: Install sarif tool
       shell: pwsh
       run: |
         $ErrorActionPreference = "Stop"
 
         # Install Sarif.Multitool globally
         dotnet tool install --global Sarif.Multitool --version 2.3.10
+
+    - name: Convert sarif
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = "Stop"
 
         # Patch .NET Core for Roll Forward
         #   Ref. https://stackoverflow.com/a/76688493
