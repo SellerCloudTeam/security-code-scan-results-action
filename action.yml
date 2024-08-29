@@ -19,6 +19,10 @@ runs:
         # Install Sarif.Multitool globally
         dotnet tool install --global Sarif.Multitool --version 2.3.10
 
+        # Patch .NET Core for Roll Forward
+        #   Ref. https://stackoverflow.com/a/76688493
+        $env:DOTNET_ROLL_FORWARD = "LatestMajor"
+
         # Define output directory
         $outputDir = "../results"
         if (-not (Test-Path $outputDir)) {
