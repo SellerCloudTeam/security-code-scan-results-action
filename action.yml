@@ -11,18 +11,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install sarif tool
+    - name: Convert sarif
       shell: pwsh
       run: |
         $ErrorActionPreference = "Stop"
 
         # Install Sarif.Multitool globally
-        dotnet tool install --global Sarif.Multitool --version 2.3.10
-
-    - name: Convert sarif
-      shell: pwsh
-      run: |
-        $ErrorActionPreference = "Stop"
+        dotnet tool install --tool-path . Sarif.Multitool --version 2.3.10
 
         # Patch .NET Core for Roll Forward
         #   Ref. https://stackoverflow.com/a/76688493
@@ -116,7 +111,7 @@ runs:
             # Transform the SARIF file
             Write-Host "Transforming SARIF file $sarifFile ..."
 
-            sarif transform "$sarifFile" --output "$transformedSarifFile" -f --sarif-output-version Current
+            ./sarif transform "$sarifFile" --output "$transformedSarifFile" -f --sarif-output-version Current
 
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to transform SARIF file using sarif dotnet tool: $sarifFile"
