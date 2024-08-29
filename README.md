@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Set up projects
-        uses: security-code-scan/security-code-scan-add-action@v1.2
+        uses: SellerCloudTeam/security-code-scan-add-action@v1.2
 
       - name: Build
         run: |
@@ -33,10 +33,10 @@ jobs:
           dotnet build
         
       - name: Convert sarif for uploading to GitHub
-        uses: security-code-scan/security-code-scan-results-action@v1
+        uses: SellerCloudTeam/security-code-scan-results-action@v1
         
       - name: Upload sarif	
         uses: github/codeql-action/upload-sarif@v1
 ```
 
-For .NET 4.x example see [FullDotNetWebApp demo repository](https://github.com/security-code-scan/FullDotNetWebApp).
+For .NET 4.x example see [FullDotNetWebApp demo repository](https://github.com/SellerCloudTeam/FullDotNetWebApp).
