@@ -39,4 +39,4 @@ jobs:
         uses: github/codeql-action/upload-sarif@v1
 ```
 
-For .NET 4.x example see [FullDotNetWebApp demo repository](https://github.com/SellerCloudTeam/FullDotNetWebApp).
+For .NET 4.x example see [FullDotNetWebApp demo repository](https://github.com/security-code-scan/FullDotNetWebApp).
