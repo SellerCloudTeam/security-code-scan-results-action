@@ -137,3 +137,15 @@ runs:
             # Increment the counter
             $i++
         }
+
+        # Merge all SARIF files into a single file
+        $mergedSarifFile = Join-Path -Path $outputDir -ChildPath "merged.sarif"
+
+        ./sarif merge "*.sarif" --output-file "$mergedSarifFile" -f --pretty-print --sarif-output-version Current
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to merge SARIF files using sarif dotnet tool"
+        }
+
+        # Delete the individual SARIF files except the merged one
+        Get-ChildItem -Path $outputDir -Filter "*.sarif" | Where-Object { $_.Name -ne $mergedSarifFile } | Remove-Item -Force
