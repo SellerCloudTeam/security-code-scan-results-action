@@ -140,7 +140,11 @@ runs:
 
         # Merge all SARIF files into a single file
         $allSarifFiles = Join-Path -Path $outputDir -ChildPath "*.sarif"
-        $mergedSarifFile = Join-Path -Path $outputDir -ChildPath "merged.sarif"
+
+        $mergedSarifFileName = "merged.sarif"
+        $mergedSarifFile = Join-Path -Path $outputDir -ChildPath $mergedSarifFileName
+
+        Write-Host "Merging SARIF files ..."
 
         ./sarif merge "$allSarifFiles" --output-file "$mergedSarifFile" -f --pretty-print --sarif-output-version Current
 
@@ -149,4 +153,4 @@ runs:
         }
 
         # Delete the individual SARIF files except the merged one
-        Get-ChildItem -Path $outputDir -Filter "*.sarif" | Where-Object { $_.Name -ne $mergedSarifFile } | Remove-Item -Force
+        Get-ChildItem -Path $outputDir -Filter "*.sarif" | Where-Object { $_.Name -ne $mergedSarifFileName } | Remove-Item -Force
